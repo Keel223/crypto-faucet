@@ -9,14 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-primary: #030305;
-            --bg-card: #0f0f14;
-            --accent: #00ff88;
-            --accent-dim: #00cc6a;
-            --text-main: #ffffff;
-            --text-muted: #666680;
-            --border: #1a1a24;
-            --danger: #ff3366;
+            --bg-primary: #030305; --bg-card: #0f0f14; --accent: #00ff88; --accent-dim: #00cc6a;
+            --text-main: #ffffff; --text-muted: #666680; --border: #1a1a24; --danger: #ff3366;
         }
         body { font-family: 'Space Grotesk', sans-serif; background: var(--bg-primary); color: var(--text-main); min-height: 100vh; }
         .mono { font-family: 'JetBrains Mono', monospace; }
@@ -25,136 +19,109 @@
         .btn-main { background: linear-gradient(135deg, var(--accent), var(--accent-dim)); color: #000; font-weight: 700; transition: all 0.2s; }
         .btn-main:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 0 20px rgba(0, 255, 136, 0.4); }
         .btn-main:disabled { opacity: 0.5; cursor: not-allowed; }
-        .input-dark { background: rgba(0,0,0,0.5); border: 1px solid var(--border); color: white; transition: border-color 0.2s; }
+        .input-dark { background: rgba(0,0,0,0.5); border: 1px solid var(--border); color: white; }
         .input-dark:focus { outline: none; border-color: var(--accent); }
-        #toast { position: fixed; bottom: 20px; right: 20px; padding: 16px 24px; border-radius: 8px; opacity: 0; transform: translateY(20px); transition: all 0.3s ease; z-index: 9999; pointer-events: none; }
-        #toast.show { opacity: 1; transform: translateY(0); }
+        #toast { position: fixed; bottom: 20px; right: 20px; padding: 16px 24px; border-radius: 8px; opacity: 0; transition: all 0.3s; z-index: 9999; }
+        #toast.show { opacity: 1; transform: translateY(-10px); }
         .toast-success { background: var(--accent); color: #000; }
         .toast-error { background: var(--danger); color: #fff; }
         .ad-container { background: rgba(0,0,0,0.2); padding: 10px 0; border-bottom: 1px solid var(--border); display: flex; justify-content: center; }
-        
-        /* Modal Styles */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 100; display: flex; align-items: center; justify-content: center; }
         .hidden { display: none; }
     </style>
 </head>
 <body class="antialiased">
     <div class="bg-grid"></div>
     
-    <!-- LOGIN MODAL -->
-    <div id="authModal" class="modal-overlay">
-        <div class="glass p-8 rounded-2xl w-full max-w-md mx-4 relative">
-            <h2 id="modalTitle" class="text-2xl font-bold mb-6 text-center">Welcome Back</h2>
+    <!-- Auth Modal -->
+    <div id="authModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
+        <div class="glass p-8 rounded-2xl w-full max-w-md mx-4">
+            <h2 id="modalTitle" class="text-2xl font-bold mb-6 text-center">Start Earning</h2>
             
             <!-- Tabs -->
             <div class="flex mb-6 border-b border-[var(--border)]">
-                <button class="flex-1 pb-2 border-b-2 border-[var(--accent)] text-[var(--accent)]" onclick="showTab('login')">Login</button>
-                <button class="flex-1 pb-2 border-b-2 border-transparent text-[var(--text-muted)]" onclick="showTab('register')">Register</button>
+                <button id="tabLogin" class="flex-1 pb-2 border-b-2 border-[var(--accent)] text-[var(--accent)]" onclick="showTab('login')">Login</button>
+                <button id="tabReg" class="flex-1 pb-2 border-b-2 border-transparent text-[var(--text-muted)]" onclick="showTab('register')">Register</button>
             </div>
 
-            <!-- Login Form -->
+            <!-- Login -->
             <div id="loginTab">
                 <div class="mb-4">
                     <label class="text-xs text-[var(--text-muted)] block mb-2">USERNAME</label>
                     <input type="text" id="loginUser" class="w-full p-3 rounded-lg input-dark text-sm" placeholder="Enter username">
                 </div>
-                <div class="mb-6">
-                    <label class="text-xs text-[var(--text-muted)] block mb-2">PASSWORD</label>
-                    <input type="password" id="loginPass" class="w-full p-3 rounded-lg input-dark text-sm" placeholder="Enter password">
-                </div>
                 <button onclick="login()" class="w-full py-3 rounded-xl font-bold text-lg btn-main">Login</button>
             </div>
 
-            <!-- Register Form -->
+            <!-- Register -->
             <div id="registerTab" class="hidden">
                 <div class="mb-4">
                     <label class="text-xs text-[var(--text-muted)] block mb-2">USERNAME</label>
                     <input type="text" id="regUser" class="w-full p-3 rounded-lg input-dark text-sm" placeholder="Choose username">
                 </div>
                 <div class="mb-4">
-                    <label class="text-xs text-[var(--text-muted)] block mb-2">PASSWORD</label>
-                    <input type="password" id="regPass" class="w-full p-3 rounded-lg input-dark text-sm" placeholder="Choose password">
-                </div>
-                <div class="mb-6">
-                    <label class="text-xs text-[var(--text-muted)] block mb-2">FAUCETPAY WALLET</label>
-                    <input type="text" id="regWallet" class="w-full p-3 rounded-lg input-dark text-sm mono" placeholder="Your USDT TRC20 Wallet">
+                    <label class="text-xs text-[var(--text-muted)] block mb-2">FAUCETPAY WALLET (USDT TRC20)</label>
+                    <input type="text" id="regWallet" class="w-full p-3 rounded-lg input-dark text-sm mono" placeholder="Your wallet address">
                 </div>
                 <button onclick="register()" class="w-full py-3 rounded-xl font-bold text-lg btn-main">Create Account</button>
             </div>
         </div>
     </div>
 
-    <!-- MAIN APP -->
+    <!-- Main App -->
     <div class="relative z-10 min-h-screen flex flex-col" id="mainApp">
         
-        <header class="glass border-b border-[var(--border)] sticky top-0 z-50">
+        <header class="glass border-b border-[var(--border)] sticky top-0 z-40">
             <div class="max-w-4xl mx-auto p-4 flex justify-between items-center">
                 <div class="flex items-center gap-2">
                     <div class="w-8 h-8 rounded bg-[var(--accent)] flex items-center justify-center text-black font-bold">F</div>
                     <span class="font-bold text-lg">CryptoFlow</span>
                 </div>
                 <div class="flex items-center gap-4">
-                    <span class="text-sm text-[var(--text-muted)]">User: <span id="headerUser" class="text-white">Guest</span></span>
-                    <button onclick="logout()" class="px-3 py-1 border border-[var(--border)] rounded hover:border-[var(--danger)] hover:text-[var(--danger)] text-xs">Logout</button>
+                    <span class="text-sm text-[var(--text-muted)]">User: <span id="headerUser" class="text-white">-</span></span>
+                    <button onclick="logout()" class="px-3 py-1 border border-[var(--border)] rounded text-xs">Logout</button>
                 </div>
             </div>
         </header>
 
-        <!-- A-ADS TOP -->
+        <!-- A-ADS -->
         <div class="ad-container">
-            <div id="frame" style="width: 100%;margin: auto;position: relative;">
-                <iframe data-aa='2429113' src='//acceptable.a-ads.com/2429113/?size=Adaptive' style='border:0; padding:0; width:70%; height:auto; overflow:hidden;display: block;margin: auto'></iframe>
-            </div>
+             <iframe data-aa='2429113' src='//acceptable.a-ads.com/2429113/?size=Adaptive' style='border:0; padding:0; width:70%; height:auto; overflow:hidden;display: block;margin: auto'></iframe>
         </div>
 
         <main class="flex-1 max-w-4xl mx-auto w-full p-4 grid lg:grid-cols-3 gap-6 py-8">
             
             <div class="lg:col-span-2 space-y-6">
-                
                 <div class="glass rounded-2xl p-6">
                     <h2 class="text-2xl font-bold mb-1">Claim Free USDT</h2>
                     <p class="text-[var(--text-muted)] mb-6">0.00000021 USDT instant to FaucetPay.</p>
 
-                    <!-- Fake Captcha -->
+                    <!-- Captcha -->
                     <div class="mb-6 p-4 border border-dashed border-[var(--border)] rounded-lg cursor-pointer hover:border-[var(--accent)] transition-colors" id="captchaBox" onclick="solveCaptcha()">
                         <div class="flex items-center gap-3">
-                            <div class="w-6 h-6 border-2 border-[var(--text-muted)] rounded flex items-center justify-center" id="captchaIcon">
-                                <svg class="w-4 h-4 text-[var(--accent)] hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                            </div>
+                            <div class="w-6 h-6 border-2 border-[var(--text-muted)] rounded flex items-center justify-center" id="captchaIcon"></div>
                             <span id="captchaText" class="text-[var(--text-muted)]">Click to verify</span>
                         </div>
                     </div>
 
-                    <button id="claimBtn" disabled onclick="claimReward()" class="w-full py-4 rounded-xl font-bold text-lg btn-main bg-gray-700 opacity-50">
+                    <button id="claimBtn" disabled onclick="claimReward()" class="w-full py-4 rounded-xl font-bold text-lg btn-main opacity-50">
                         CLAIM 0.00000021 USDT
                     </button>
                 </div>
             </div>
 
             <div class="space-y-6">
-                
                 <div class="glass rounded-2xl p-6 text-center">
                     <div class="text-xs text-[var(--text-muted)] mb-1">ACCOUNT BALANCE</div>
                     <div class="text-3xl font-bold mono text-[var(--accent)]" id="balance">0.00000000</div>
                     <div class="text-sm text-[var(--text-muted)]">USDT</div>
                 </div>
 
-                <!-- Referral Stats -->
                 <div class="glass rounded-2xl p-6">
-                    <h3 class="font-bold mb-3 text-[var(--accent)]">Referral Program</h3>
-                    <div class="grid grid-cols-2 gap-2 mb-3 text-center">
-                        <div class="bg-black/30 p-2 rounded">
-                            <div class="text-lg font-bold" id="refCount">0</div>
-                            <div class="text-[10px] text-[var(--text-muted)]">REFERRALS</div>
-                        </div>
-                        <div class="bg-black/30 p-2 rounded">
-                            <div class="text-lg font-bold" id="refEarnings">0.00</div>
-                            <div class="text-[10px] text-[var(--text-muted)]">EARNED</div>
-                        </div>
-                    </div>
+                    <h3 class="font-bold mb-3">Referral Program</h3>
+                    <div class="text-xs text-[var(--text-muted)] mb-2">Share link and earn:</div>
                     <div class="flex gap-2">
                         <input type="text" readonly id="refLink" class="w-full p-2 rounded input-dark text-xs mono bg-black/50">
-                        <button onclick="copyRef()" class="px-3 py-2 bg-white/10 rounded hover:bg-white/20">📋</button>
+                        <button onclick="copyRef()" class="px-3 py-2 bg-white/10 rounded">📋</button>
                     </div>
                 </div>
             </div>
@@ -166,17 +133,19 @@
 
     <script>
         const API = '/api/claim';
-        let currentUser = null;
-        let captchaSolved = false;
+        let user = null;
+        let captcha = false;
 
-        // --- UI LOGIC ---
-        function showTab(tab) {
-            document.getElementById('loginTab').classList.toggle('hidden', tab !== 'login');
-            document.getElementById('registerTab').classList.toggle('hidden', tab !== 'register');
-            document.getElementById('modalTitle').textContent = tab === 'login' ? 'Welcome Back' : 'Create Account';
+        function showTab(t) {
+            document.getElementById('loginTab').classList.toggle('hidden', t !== 'login');
+            document.getElementById('registerTab').classList.toggle('hidden', t !== 'register');
+            document.getElementById('tabLogin').classList.toggle('border-[var(--accent)]', t === 'login');
+            document.getElementById('tabLogin').classList.toggle('text-[var(--accent)]', t === 'login');
+            document.getElementById('tabReg').classList.toggle('border-[var(--accent)]', t === 'register');
+            document.getElementById('tabReg').classList.toggle('text-[var(--accent)]', t === 'register');
         }
 
-        function showToast(msg, type) {
+        function toast(msg, type) {
             const el = document.getElementById('toast');
             el.innerText = msg;
             el.className = `show toast-${type}`;
@@ -184,108 +153,102 @@
         }
 
         function updateUI() {
-            if (!currentUser) return;
-            document.getElementById('headerUser').textContent = currentUser.username;
-            document.getElementById('balance').textContent = currentUser.balance;
-            document.getElementById('refCount').textContent = currentUser.referrals;
-            document.getElementById('refEarnings').textContent = currentUser.refEarnings;
-            document.getElementById('refLink').value = `${window.location.origin}?ref=${currentUser.username}`;
+            if (!user) return;
+            document.getElementById('headerUser').textContent = user.name;
+            document.getElementById('balance').textContent = user.balance.toFixed(8);
+            document.getElementById('refLink').value = `${window.location.origin}?ref=${user.name}`;
         }
 
-        // --- AUTH LOGIC ---
-        async function register() {
-            const username = document.getElementById('regUser').value;
-            const password = document.getElementById('regPass').value;
-            const wallet = document.getElementById('regWallet').value;
-
-            if (!username || !password || !wallet) return showToast('Fill all fields', 'error');
-
-            // Check referral from URL
-            const urlParams = new URLSearchParams(window.location.search);
-            const ref = urlParams.get('ref');
-
-            const res = await fetch(API, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'register', username, password, wallet, ref })
-            });
-            const data = await res.json();
+        // --- AUTH (LocalStorage) ---
+        function register() {
+            const name = document.getElementById('regUser').value.trim();
+            const wallet = document.getElementById('regWallet').value.trim();
+            if (!name || !wallet) return toast('Fill fields', 'error');
             
-            if (data.success) {
-                showToast('Registered! Now login.', 'success');
-                showTab('login');
-            } else {
-                showToast(data.message, 'error');
-            }
+            const newUser = { name, wallet, balance: 0, lastClaim: 0 };
+            localStorage.setItem('cf_data', JSON.stringify(newUser));
+            user = newUser;
+            document.getElementById('authModal').classList.add('hidden');
+            updateUI();
+            toast('Account created!', 'success');
         }
 
-        async function login() {
-            const username = document.getElementById('loginUser').value;
-            const password = document.getElementById('loginPass').value;
-
-            const res = await fetch(API, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'login', username, password })
-            });
-            const data = await res.json();
-
-            if (data.success) {
-                currentUser = data.data;
-                currentUser.username = username; // save username locally
-                localStorage.setItem('cf_user', JSON.stringify(currentUser));
-                document.getElementById('authModal').classList.add('hidden');
-                updateUI();
-                showToast('Welcome ' + username, 'success');
+        function login() {
+            const name = document.getElementById('loginUser').value.trim();
+            if (!name) return toast('Enter username', 'error');
+            
+            // Try to load existing
+            let data = localStorage.getItem('cf_data');
+            if (data) {
+                user = JSON.parse(data);
+                if(user.name !== name) {
+                    // If name different, "login" as new user with this name (simplified)
+                    user = { name: name, wallet: '', balance: 0, lastClaim: 0 };
+                    localStorage.setItem('cf_data', JSON.stringify(user));
+                }
             } else {
-                showToast(data.message, 'error');
+                user = { name: name, wallet: '', balance: 0, lastClaim: 0 };
+                localStorage.setItem('cf_data', JSON.stringify(user));
+            }
+            
+            document.getElementById('authModal').classList.add('hidden');
+            updateUI();
+            
+            if(!user.wallet) {
+                // If logged in but no wallet, ask to "register" effectively
+                toast('Please register wallet first', 'error');
+                showTab('register');
+                document.getElementById('authModal').classList.remove('hidden');
             }
         }
 
         function logout() {
-            localStorage.removeItem('cf_user');
+            localStorage.removeItem('cf_data');
             location.reload();
         }
 
-        // --- FAUCET LOGIC ---
+        // --- FAUCET ---
         function solveCaptcha() {
-            if (captchaSolved) return;
-            captchaSolved = true;
-            
-            const box = document.getElementById('captchaBox');
-            box.querySelector('#captchaIcon svg').classList.remove('hidden');
-            box.querySelector('#captchaIcon').classList.remove('border-[var(--text-muted)]');
-            box.querySelector('#captchaIcon').classList.add('border-[var(--accent)]', 'bg-[var(--accent)]');
-            box.querySelector('#captchaText').textContent = 'Verified';
-            box.querySelector('#captchaText').classList.add('text-[var(--accent)]');
+            if (captcha) return;
+            captcha = true;
+            document.getElementById('captchaIcon').innerHTML = '<svg class="w-4 h-4 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>';
+            document.getElementById('captchaText').textContent = 'Verified';
+            document.getElementById('captchaText').classList.add('text-[var(--accent)]');
             
             const btn = document.getElementById('claimBtn');
             btn.disabled = false;
-            btn.classList.remove('bg-gray-700', 'opacity-50');
+            btn.classList.remove('opacity-50');
         }
 
         async function claimReward() {
-            if (!currentUser) return showToast('Login first', 'error');
+            if (!user || !user.wallet) return toast('Wallet not found. Logout and Register.', 'error');
             
             const btn = document.getElementById('claimBtn');
             btn.disabled = true;
             btn.textContent = 'Sending...';
 
-            const res = await fetch(API, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'claim', username: currentUser.username })
-            });
-            const data = await res.json();
+            try {
+                const res = await fetch(API, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'claim', wallet: user.wallet })
+                });
+                const data = await res.json();
 
-            if (data.success) {
-                showToast('Payment sent!', 'success');
-                // Update local balance approx
-                currentUser.balance = (parseFloat(currentUser.balance) + 0.00000021).toFixed(8);
-                updateUI();
-                btn.textContent = 'CLAIMED! (Wait 5m)';
-            } else {
-                showToast(data.message, 'error');
+                if (data.success) {
+                    user.balance += 0.00000021;
+                    user.lastClaim = Date.now();
+                    localStorage.setItem('cf_data', JSON.stringify(user));
+                    updateUI();
+                    toast('Payment sent! Check FaucetPay.', 'success');
+                    btn.textContent = 'CLAIMED (Wait 5m)';
+                } else {
+                    toast(data.message || 'Error', 'error');
+                    btn.textContent = 'TRY AGAIN';
+                    btn.disabled = false;
+                }
+            } catch (e) {
+                toast('Server connection error', 'error');
                 btn.textContent = 'TRY AGAIN';
                 btn.disabled = false;
             }
@@ -293,14 +256,14 @@
 
         function copyRef() {
             navigator.clipboard.writeText(document.getElementById('refLink').value);
-            showToast('Link copied!', 'success');
+            toast('Link copied!', 'success');
         }
 
         // --- INIT ---
         window.onload = () => {
-            const saved = localStorage.getItem('cf_user');
+            const saved = localStorage.getItem('cf_data');
             if (saved) {
-                currentUser = JSON.parse(saved);
+                user = JSON.parse(saved);
                 document.getElementById('authModal').classList.add('hidden');
                 updateUI();
             }
