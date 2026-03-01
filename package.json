@@ -1,9 +1,8 @@
 {
   "name": "cryptoflow-faucet",
   "version": "1.0.0",
-  "description": "A crypto faucet with FaucetPay integration",
-  "main": "api/claim.js",
   "dependencies": {
-    "node-fetch": "^2.6.1"
+    "node-fetch": "^2.6.1",
+    "@upstash/redis": "^1.20.0"
   }
 }
