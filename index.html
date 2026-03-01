@@ -89,8 +89,14 @@
         .toast-success { background: var(--accent); color: #000; }
         .toast-error { background: var(--danger); color: #fff; }
 
-        @keyframes spin { 0% { transform: translateY(0); } 100% { transform: translateY(-100%); } }
-        .spinning { animation: spin 0.1s linear infinite; }
+        /* Стили для рекламы */
+        .ad-container {
+            background: rgba(0,0,0,0.2);
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: center;
+        }
     </style>
 </head>
 <body class="antialiased">
@@ -110,6 +116,15 @@
                 </div>
             </div>
         </header>
+
+        <!-- РЕКЛАМНЫЙ БАННЕР A-ADS (Верхний) -->
+        <div class="ad-container">
+            <div id="frame" style="width: 100%;margin: auto;position: relative;">
+                <iframe data-aa='2429113' src='//acceptable.a-ads.com/2429113/?size=Adaptive'
+                                style='border:0; padding:0; width:70%; height:auto; overflow:hidden;display: block;margin: auto'></iframe>
+            </div>
+        </div>
+        <!-- КОНЕЦ РЕКЛАМНОГО БЛОКА -->
 
         <main class="flex-1 max-w-4xl mx-auto w-full p-4 grid lg:grid-cols-3 gap-6 py-8">
             
@@ -187,6 +202,15 @@
             </div>
 
         </main>
+
+        <!-- РЕКЛАМНЫЙ БАННЕР A-ADS (Нижний - опционально) -->
+        <div class="ad-container mt-auto border-t border-[var(--border)]">
+            <div id="frame-footer" style="width: 100%;margin: auto;position: relative;">
+                <iframe data-aa='2429113' src='//acceptable.a-ads.com/2429113/?size=Adaptive'
+                                style='border:0; padding:0; width:70%; height:auto; overflow:hidden;display: block;margin: auto'></iframe>
+            </div>
+        </div>
+
     </div>
 
     <div id="toast"></div>
@@ -362,4 +386,4 @@
         init();
     </script>
 </body>
-</html>
+    </html>
