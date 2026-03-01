@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CryptoFlow Faucet</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #030305;
+            --bg-card: #0f0f14;
+            --accent: #00ff88;
+            --accent-dim: #00cc6a;
+            --text-main: #ffffff;
+            --text-muted: #666680;
+            --border: #1a1a24;
+            --danger: #ff3366;
+        }
+        
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+        
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Background Animation */
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            background-image: linear-gradient(rgba(0, 255, 136, 0.03) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(0, 255, 136, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .glass {
+            background: rgba(15, 15, 20, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+        }
+
+        .btn-main {
+            background: linear-gradient(135deg, var(--accent), var(--accent-dim));
+            color: #000;
+            font-weight: 700;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-main:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+        }
+
+        .btn-main:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .input-dark {
+            background: rgba(0,0,0,0.5);
+            border: 1px solid var(--border);
+            color: white;
+            transition: border-color 0.2s;
+        }
+        .input-dark:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        /* Toast */
+        #toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            border-radius: 8px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            z-index: 9999;
+            pointer-events: none;
+        }
+        #toast.show { opacity: 1; transform: translateY(0); }
+        .toast-success { background: var(--accent); color: #000; }
+        .toast-error { background: var(--danger); color: #fff; }
+
+        /* Slots Animation */
+        @keyframes spin { 0% { transform: translateY(0); } 100% { transform: translateY(-100%); } }
+        .spinning { animation: spin 0.1s linear infinite; }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="bg-grid"></div>
+    
+    <!-- Main Container -->
+    <div class="relative z-10 min-h-screen flex flex-col">
+        
+        <!-- Header -->
+        <header class="glass border-b border-[var(--border)] sticky top-0 z-50">
+            <div class="max-w-4xl mx-auto p-4 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded bg-[var(--accent)] flex items-center justify-center text-black font-bold">F</div>
+                    <span class="font-bold text-lg">CryptoFlow</span>
+                    <span class="text-[10px] bg-[var(--accent)] text-black px-1 rounded ml-1 font-bold">FAUCETPAY</span>
+                </div>
+                <div class="text-sm text-[var(--text-muted)]">
+                    Powered by <a href="https://faucetpay.io" target="_blank" class="text-[var(--accent)] hover:underline">FaucetPay</a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content -->
+        <main class="flex-1 max-w-4xl mx-auto w-full p-4 grid lg:grid-cols-3 gap-6 py-8">
+            
+            <!-- LEFT COLUMN: FAUCET -->
+            <div class="lg:col-span-2 space-y-6">
+                
+                <!-- Claim Card -->
+                <div class="glass rounded-2xl p-6">
+                    <h2 class="text-2xl font-bold mb-1">Claim Free Crypto</h2>
+                    <p class="text-[var(--text-muted)] mb-6">Instant payout to your FaucetPay wallet.</p>
+                    
+                    <div class="mb-4">
+                        <label class="text-xs text-[var(--text-muted)] block mb-2">YOUR WALLET ADDRESS</label>
+                        <input type="text" id="walletInput" placeholder="Enter FaucetPay linked wallet" class="w-full p-3 rounded-lg input-dark mono text-sm">
+                    </div>
+
+                    <!-- Fake Captcha for UI (Real anti-abuse should be hCaptcha/reCAPTCHA on backend) -->
+                    <div class="mb-6 p-4 border border-dashed border-[var(--border)] rounded-lg cursor-pointer hover:border-[var(--accent)] transition-colors" id="captchaBox" onclick="solveCaptcha()">
+                        <div class="flex items-center gap-3" id="captchaContent">
+                            <div class="w-6 h-6 border-2 border-[var(--text-muted)] rounded flex items-center justify-center">
+                                <svg class="w-4 h-4 text-[var(--accent)] hidden" id="captchaCheck" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                            </div>
+                            <span class="text-[var(--text-muted)]">Verify you are human (Anti-Bot)</span>
+                        </div>
+                    </div>
+
+                    <button id="claimBtn" disabled onclick="claimReward()" class="w-full py-4 rounded-xl font-bold text-lg btn-main">
+                        CLAIM 0.00000021 USDT
+                    </button>
+
+                    <div id="statusMsg" class="mt-4 text-center text-sm hidden"></div>
+                </div>
+
+                <!-- Casino Card -->
+                <div class="glass rounded-2xl p-6">
+                    <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+                        <span class="text-[var(--accent)]">★</span> Mini Games (Balance needed)
+                    </h3>
+                    <div class="grid grid-cols-3 gap-3">
+                        <!-- Coinflip -->
+                        <button onclick="playGame('coinflip')" class="p-3 bg-black/30 rounded-lg hover:bg-black/50 transition text-center">
+                            <div class="text-2xl mb-1">🪙</div>
+                            <div class="text-xs text-[var(--text-muted)]">Coinflip</div>
+                        </button>
+                        <!-- Dice -->
+                        <button onclick="playGame('dice')" class="p-3 bg-black/30 rounded-lg hover:bg-black/50 transition text-center">
+                            <div class="text-2xl mb-1">🎲</div>
+                            <div class="text-xs text-[var(--text-muted)]">Dice</div>
+                        </button>
+                        <!-- Slots -->
+                        <button onclick="playGame('slots')" class="p-3 bg-black/30 rounded-lg hover:bg-black/50 transition text-center">
+                            <div class="text-2xl mb-1">🎰</div>
+                            <div class="text-xs text-[var(--text-muted)]">Slots</div>
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-[var(--text-muted)] mt-3 text-center">Games require local balance. Deposit via claims.</p>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: STATS & INFO -->
+            <div class="space-y-6">
+                
+                <!-- Balance -->
+                <div class="glass rounded-2xl p-6 text-center">
+                    <div class="text-xs text-[var(--text-muted)] mb-1">YOUR LOCAL BALANCE</div>
+                    <div class="text-3xl font-bold mono text-[var(--accent)]" id="balance">0.00000000</div>
+                    <div class="text-sm text-[var(--text-muted)]">USDT</div>
+                </div>
+
+                <!-- Referral -->
+                <div class="glass rounded-2xl p-6">
+                    <h3 class="font-bold mb-3">Referral Program</h3>
+                    <p class="text-xs text-[var(--text-muted)] mb-3">Earn 20% from every claim.</p>
+                    <div class="flex gap-2">
+                        <input type="text" readonly id="refLink" class="w-full p-2 rounded input-dark text-xs mono bg-black/50">
+                        <button onclick="copyRef()" class="px-3 py-2 bg-white/10 rounded hover:bg-white/20">📋</button>
+                    </div>
+                </div>
+
+                <!-- Info -->
+                <div class="glass rounded-2xl p-6 text-xs text-[var(--text-muted)] space-y-2">
+                    <div class="flex justify-between"><span>Reward:</span><span class="text-white">0.00000021 USDT</span></div>
+                    <div class="flex justify-between"><span>Cooldown:</span><span class="text-white">5 Minutes</span></div>
+                    <div class="flex justify-between"><span>Network:</span><span class="text-white">TRC20 / BEP20</span></div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast"></div>
+
+    <script>
+        // --- CONFIG ---
+        // В продакшене замени на свой URL Vercel
+        const API_ENDPOINT = '/api/claim'; 
+        const REWARD = "0.00000021";
+        
+        // --- STATE ---
+        let state = {
+            balance: parseFloat(localStorage.getItem('fp_balance') || '0'),
+            captchaDone: false,
+            lastClaim: parseInt(localStorage.getItem('fp_lastClaim') || '0')
+        };
+
+        // --- DOM ELEMENTS ---
+        const btn = document.getElementById('claimBtn');
+        const captchaBox = document.getElementById('captchaBox');
+        const captchaCheck = document.getElementById('captchaCheck');
+        const balanceEl = document.getElementById('balance');
+        const statusMsg = document.getElementById('statusMsg');
+        const walletInput = document.getElementById('walletInput');
+
+        // --- INIT ---
+        function init() {
+            updateUI();
+            checkCooldown();
+            
+            // Referral Link
+            const refId = localStorage.getItem('ref_id') || (Math.random().toString(36).substring(2, 8));
+            localStorage.setItem('ref_id', refId);
+            document.getElementById('refLink').value = `${window.location.origin}?ref=${refId}`;
+
+            // Check URL for ref
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('ref')) {
+                localStorage.setItem('referredBy', urlParams.get('ref'));
+            }
+        }
+
+        function updateUI() {
+            balanceEl.innerText = state.balance.toFixed(8);
+            localStorage.setItem('fp_balance', state.balance.toString());
+        }
+
+        // --- FAUCET LOGIC ---
+
+        function solveCaptcha() {
+            if (state.captchaDone) return;
+            
+            // Simulate captcha solving delay for UI feel
+            captchaBox.innerHTML = '<div class="text-center text-[var(--accent)]">Verifying...</div>';
+            
+            setTimeout(() => {
+                state.captchaDone = true;
+                captchaBox.innerHTML = `
+                    <div class="flex items-center gap-3 text-[var(--accent)]">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                        <span>Verified!</span>
+                    </div>
+                `;
+                captchaBox.classList.add('border-[var(--accent)]', 'bg-[var(--accent)]/10');
+                captchaBox.style.pointerEvents = 'none';
+                
+                if (!isOnCooldown()) {
+                    btn.disabled = false;
+                }
+            }, 800);
+        }
+
+        function isOnCooldown() {
+            const now = Date.now();
+            const diff = now - state.lastClaim;
+            return diff < 300000; // 5 mins
+        }
+
+        function checkCooldown() {
+            if (isOnCooldown()) {
+                btn.disabled = true;
+                btn.innerText = "WAIT 5 MINUTES";
+                
+                // Start countdown visual (simplified)
+                setTimeout(() => {
+                    location.reload(); // Lazy refresh
+                }, 300000);
+            } else {
+                btn.disabled = !state.captchaDone;
+            }
+        }
+
+        async function claimReward() {
+            const wallet = walletInput.value.trim();
+            
+            if (!wallet) {
+                showToast("Enter wallet address!", "error");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = "SENDING...";
+            
+            const refBy = localStorage.getItem('referredBy') || '';
+
+            try {
+                // Send request to our Vercel API
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ wallet: wallet, referral: refBy })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Success
+                    showToast("Payment sent to FaucetPay!", "success");
+                    
+                    // Update local balance (for games)
+                    state.balance += parseFloat(REWARD);
+                    state.lastClaim = Date.now();
+                    localStorage.setItem('fp_lastClaim', state.lastClaim.toString());
+                    updateUI();
+                    
+                    btn.innerText = "CLAIMED!";
+                } else {
+                    // Error from API
+                    showToast(data.message || "Error sending payment", "error");
+                    btn.disabled = false;
+                    btn.innerText = "TRY AGAIN";
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("Connection error", "error");
+                btn.disabled = false;
+                btn.innerText = "TRY AGAIN";
+            }
+        }
+
+        // --- MINI GAMES (Client-side for fun, uses local balance) ---
+        
+        function playGame(type) {
+            if (state.balance < 0.00000001) {
+                showToast("Insufficient balance", "error");
+                return;
+            }
+
+            const bet = 0.00000001; // Min bet
+            state.balance -= bet;
+            
+            let win = false;
+            let resultText = "";
+
+            if (type === 'coinflip') {
+                win = Math.random() > 0.5;
+                resultText = win ? "Heads! You win!" : "Tails! You lose!";
+            } else if (type === 'dice') {
+                const roll = Math.floor(Math.random() * 6) + 1;
+                win = roll > 3;
+                resultText = `Rolled ${roll}. ${win ? "Win!" : "Lose!"}`;
+            } else if (type === 'slots') {
+                const symbols = ["7", "BAR", "🍒"];
+                const s1 = symbols[Math.floor(Math.random()*3)];
+                const s2 = symbols[Math.floor(Math.random()*3)];
+                const s3 = symbols[Math.floor(Math.random()*3)];
+                win = (s1 === s2 && s2 === s3);
+                resultText = `${s1} ${s2} ${s3} - ${win ? "JACKPOT!" : "Try again"}`;
+            }
+
+            if (win) {
+                state.balance += (bet * 1.9); // 1.9x payout
+                showToast(resultText, "success");
+            } else {
+                showToast(resultText, "error");
+            }
+
+            updateUI();
+        }
+
+        // --- UTILS ---
+
+        function showToast(msg, type) {
+            const el = document.getElementById('toast');
+            el.innerText = msg;
+            el.className = `show toast-${type}`;
+            setTimeout(() => el.classList.remove('show'), 3000);
+        }
+
+        function copyRef() {
+            navigator.clipboard.writeText(document.getElementById('refLink').value);
+            showToast("Link copied!", "success");
+        }
+
+        // Start
+        init();
+    </script>
+</body>
+  </html>
